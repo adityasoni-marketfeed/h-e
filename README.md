@@ -29,27 +29,56 @@ A high-performance backend service for tracking and managing an equal-weighted s
 
 ## Local Setup Instructions
 
-### 1. Clone the Repository
+### Quick Setup (Using Setup Script)
+
+The easiest way to set up the project is using the provided setup script:
 
 ```bash
-git clone <repository-url>
-cd hedgineer
+# Clone the repository
+git clone https://github.com/adityasoni-marketfeed/h-e.git
+cd h-e
+
+# Make the setup script executable
+chmod +x setup.sh
+
+# Run the setup script
+./setup.sh
 ```
 
-### 2. Create Virtual Environment
+The setup script will:
+1. Check Python version (requires 3.11+)
+2. Create a Python virtual environment
+3. Upgrade pip and install all dependencies
+4. Create necessary directories (data/, exports/)
+5. Copy .env.example to .env
+6. Initialize the database
+7. Display next steps
+
+### Manual Setup (Step by Step)
+
+If you prefer to set up manually or the script doesn't work on your system:
+
+#### 1. Clone the Repository
+
+```bash
+git clone https://github.com/adityasoni-marketfeed/h-e.git
+cd h-e
+```
+
+#### 2. Create Virtual Environment
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### 3. Install Dependencies
+#### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+#### 4. Configure Environment Variables
 
 Create a `.env` file in the project root:
 
@@ -83,29 +112,68 @@ INDEX_NAME=Equal-Weighted Top 100 Index
 LOG_LEVEL=INFO
 ```
 
-### 5. Initialize the Database
+#### 5. Create Required Directories
 
-The database will be automatically initialized when you start the server, but you can also run:
+```bash
+mkdir -p data exports
+```
 
+The directories are:
+- `data/`: Stores the DuckDB database file
+- `exports/`: Stores exported CSV/JSON files (created by export endpoints)
+
+#### 6. Initialize the Database
+
+The database can be initialized in two ways:
+
+**Option 1: Manual initialization (recommended for first-time setup)**
 ```bash
 python -m app.db.init_db
 ```
 
-### 6. Fetch Initial Stock Data
+This will:
+- Create the DuckDB database file at `data/hedgineer.db`
+- Create all required tables (stock_info, stock_data, index_compositions, index_performance)
+- Set up indexes for optimal query performance
+
+**Option 2: Automatic initialization**
+The database will be automatically initialized when you start the server for the first time.
+
+#### 7. Fetch Initial Stock Data
+
+Before you can build the index, you need to fetch stock data:
 
 ```bash
 python -m data_acquisition.fetch_data
 ```
 
-This will fetch historical data for all 100 stocks in the index.
+This will:
+- Fetch stock information for all 100 stocks
+- Download historical price data (last 2 years by default)
+- Store the data in the database
+- Handle rate limiting automatically
 
-### 7. Start the Server
+**Note**: This process may take 2-3 minutes due to Yahoo Finance rate limits.
+
+#### 8. Start the Server
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The API will be available at `http://localhost:8000`
+
+### Verify Installation
+
+After setup, verify everything is working:
+
+```bash
+# Check API health
+curl http://localhost:8000/api/v1/health
+
+# Check API documentation
+open http://localhost:8000/docs  # or visit in browser
+```
 
 ## API Documentation
 
